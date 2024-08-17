@@ -156,6 +156,3 @@ cmake .. -DCMAKE_ZXASM_COMPILER="/path/to/sjasmplus"
 make
 ```
 
-## Known issues
-
-* There is no timeout handling.
