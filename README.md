@@ -140,8 +140,10 @@ In main.asm, the bank selected for the server is 223.
 If you Spectrum Next has less memory, you'll want to edit the value to a page in your memory range.
 An improvement may be the automatic relocation of the server to another page.
 
+```
 SERVER_BANK EQU 223 ; 2MB
 ;SERVER_BANK EQU 95  ; 1MB
+```
 
 ## Steps
 
@@ -153,3 +155,7 @@ cd build
 cmake .. -DCMAKE_ZXASM_COMPILER="/path/to/sjasmplus"
 make
 ```
+
+## Known issues
+
+* There is no timeout handling.
