@@ -7,6 +7,8 @@ It is meant to be used with a remote controller running on a Desktop.
 
 The controller uploads a binary image into the banks of the Spectrum Next and executes the code.
 
+It's meant to be used with https://github.com/hurricane-src/QtSpectrumNextRemote
+
 ## Why?
 
 When I've first started to work on this, I had lots of "why" questions.
