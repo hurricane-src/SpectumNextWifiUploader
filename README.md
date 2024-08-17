@@ -123,7 +123,25 @@ Finally, a call is made at address $fff0 using **CallTo**.
 
 The protocol is simple enough and could be used for other remote code injection/execution usages.
 
+# Notes
+
+The code contains a stub to configure the WiFi.
+When I found out there was wifi2.bas on the Spectrum Next I've stopped writing the code and diabled the option.
+I've not deleted the code as I don't know if I'll finish it or if I'll delete it.
+
 # How to Build
+
+## Important note
+
+This has been written for the 2MB variant of the Spectrum Next.
+In main.asm, the bank selected for the server is 223.
+If you Spectrum Next has less memory, you'll want to edit the value to a page in your memory range.
+An improvement may be the automatic relocation of the server to another page.
+
+SERVER_BANK EQU 223 ; 2MB
+;SERVER_BANK EQU 95  ; 1MB
+
+## Steps
 
 The build is made using a basic cmake and **sjasmplus**
 
