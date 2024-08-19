@@ -74,7 +74,7 @@ esp_queue_multiple_connection_mode:
         ret       
 
 esp_queue_create_tcp_server:
-        ld hl, at_cipserver_1_333
+        ld hl, at_cipserver_1_333_cmd
         call strlen
         call uart_send_bytes_echo
         ret
@@ -90,27 +90,6 @@ esp_get_connection_status:
         call uart_recv_response
         ret
 
-esp_tcp_start:
-        ld hl, at_tcp_start_cmd
-        call esp_command
-        ret
-
-esp_tcp_send:
-        ld hl, at_tcp_send_cmd
-        call strlen
-        call uart_send_bytes_echo
-        ret c
-.loop:
-        ld hl, temporary_buffer
-        ld bc, temporary_buffer_end - temporary_buffer
-        call uart_recv_line
-        jr nc, .loop
-        ret
-
-esp_tcp_close:
-        ld hl, at_tcp_close_cmd
-        call esp_command
-        ret
 
 esp_cwlap:
         ld hl, at_cwlap_cmd:
@@ -154,6 +133,9 @@ at_check_version_information_cmd:
 at_echo_off_cmd:
         at_command "E0"
 
+at_echo_on_cmd:
+        at_command "E1"
+
 at_uart_config_query_cmd:
         at_command "+UART_CUR?"
 
@@ -169,17 +151,17 @@ at_get_connection_status_cmd:
 at_cipmux_1_cmd:
         at_command "+CIPMUX=1"
 
-at_cipserver_1_333:
+at_cipmux_0_cmd:
+        at_command "+CIPMUX=0"
+
+at_cipserver_1_333_cmd:
         at_command "+CIPSERVER=1,1023"
 
-at_tcp_start_cmd:
-        at_command '+CIPSTART="TCP","www.hurrikhan.eu",80'
+at_cipserver_0_1_cmd:
+        at_command "+CIPSERVER=0,1"
 
-at_tcp_send_cmd
-        db "AT+CIPSEND=18\r\nGET / HTTP/1.0\r\n\r\n", 0
-
-at_tcp_close_cmd:
-        at_command "+CIPCLOSE"
+at_cipserver_0_cmd:
+        at_command "+CIPSERVER=0"
 
 at_cwlap_cmd:
         at_command "+CWLAP"
@@ -195,9 +177,10 @@ esp_command:
         call strlen ; bc = length of the asciiz in hl
         call uart_send_bytes_echo
         ret c
-        ld hl, temporary_buffer
-        ld bc, temporary_buffer_end - temporary_buffer
-        call uart_recv_response
+        ;ld hl, temporary_buffer
+        ;ld bc, temporary_buffer_end - temporary_buffer
+        ;call uart_recv_response
+        call esp_print_input_until_timeout
         ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -780,6 +763,7 @@ client_read_command_table:
         dw client_command_call
         dw client_command_echo
         dw client_command_zeroes
+        dw client_command_close_and_jump
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -826,7 +810,7 @@ client_read_command:
         call putc
         pop af
         ENDIF
-        cp 7
+        cp 8
         jr nc, .error ; not a supported code
         add a
         ld hl, client_read_command_table
@@ -1107,7 +1091,7 @@ client_command_writeat:
 ; part 1: read the header
 
 client_command_zeroes:
-        ; offset, len, bytes
+        ; offset, len
         ld a, (.header_len)
         ld hl, .header
         add hl, a
@@ -1206,6 +1190,66 @@ client_command_call:
         ret
 .header_len     db 0   
 .error_text     db "jumpto error\n", 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; calls an address in memory
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+client_command_close_and_jump:
+        ; offset
+        ld a, (.header_len)
+        ld hl, .jump_address
+        add hl, a
+        inc a
+        ld (.header_len), a
+        call client_fetch_byte
+        jr c, .error
+        ld (hl), a
+        ld a, (.header_len)
+        cp 2
+        ret nz
+        call client_read_command_reset
+        xor a
+        ld (.header_len), a
+
+        ;; close: attempt to restore the original state of the ESP8266
+
+        ld hl, client_close_connection_msg ; closes the connection
+        call esp_command
+
+        ld hl, at_cipserver_0_1_cmd ; closes all connections (doesn't work on all ESP8266)
+        call esp_command
+
+        ld hl, at_cipserver_0_cmd ; deletes the TCP server
+        call esp_command
+
+        ld hl, at_cipmux_0_cmd ; error if CIPSERVER set to anything else than 0
+        call esp_command
+
+        ld hl, at_echo_on_cmd ; echo OFF
+        call esp_command
+
+        ;call wait_1000ms
+        ;call wait_1000ms
+        ;call wait_1000ms
+        ;call wait_1000ms
+        ;call wait_1000ms
+
+        db $c3 ; jump to a 16 bits address
+.jump_address dw 0
+        di      ;; never reached
+        halt
+.error:
+        xor a
+        ld (.header_len), a
+        ld hl, .error_text
+        call puts
+        call client_disconnect_return_error
+        ret
+.header_len     db 0   
+.error_text     db "closeAndJump error\n", 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

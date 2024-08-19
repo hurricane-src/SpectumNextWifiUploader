@@ -98,6 +98,27 @@ In practice, the code uploaded by the remote never returns.
 
 The controller sends [4, address_lo, address_hi]
 
+#### Echo (5)
+
+A message to print characters.
+
+The controller sends [5, ... ASCIIZ ...]
+
+#### Zeroes (6)
+
+A message to write zero bytes at a given position in memory.
+Some WriteAt send only zeroes. This helps reducing bandwidth.
+
+The controller sends [6, offset_lo, offset_hi, len_lo, len_hi]
+
+#### CloseAndJumpTo (7)
+
+A message to terminate the connection and jump to the given destination address
+Used to bootstrap to the uploaded executable.
+This is a point of no return
+
+The controller sends [7, address_lo, address_hi]
+
 ## Protocol as used by the remote
 
 The remote fist do **GetBanks**.

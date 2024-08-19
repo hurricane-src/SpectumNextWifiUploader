@@ -60,7 +60,8 @@ strlen:
         pop af
         ret
 
-FRAME_COUNTER_ADDRESS EQU $5c78
+;FRAME_COUNTER_ADDRESS EQU $5c78
+FRAME_COUNTER_ADDRESS EQU frame_counter
 
 wait_20ms: ; 50Hz => 
         push af
@@ -72,7 +73,7 @@ wait_20ms: ; 50Hz =>
         halt
         ld a, (FRAME_COUNTER_ADDRESS)
         cp b
-        jr z, .wait
+        jr nz, .wait
         pop bc
         pop af
         ret
@@ -88,7 +89,7 @@ wait_100ms:
         halt
         ld a, (FRAME_COUNTER_ADDRESS)
         cp b
-        jr z, .wait
+        jr nz, .wait
         pop bc
         pop af
         ret
@@ -104,7 +105,7 @@ wait_500ms:
         halt
         ld a, (FRAME_COUNTER_ADDRESS)
         cp b
-        jr z, .wait
+        jr nz, .wait
         pop bc
         pop af
         ret
@@ -120,7 +121,7 @@ wait_1000ms:
         halt
         ld a, (FRAME_COUNTER_ADDRESS)
         cp b
-        jr z, .wait
+        jr nz, .wait
         pop bc
         pop af
         ret

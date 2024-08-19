@@ -326,7 +326,7 @@ RealStart:
         call esp_queue_command_and_wait
         jp c, .failure
 
-        ld hl, at_cipserver_1_333
+        ld hl, at_cipserver_1_333_cmd
         call esp_queue_command_and_wait
         jp c, .failure
 
@@ -377,9 +377,12 @@ RealStart:
         jr .wait_forever
 
 .menu_text:
+        db "Wifi Uploader v1.1\n"
         ;db "w - Wi-Fi setup\n"
         db "p - Print information\n"
         db 0
+
+        IFDEF WIFI_SETUP_IMPLEMENTED
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -531,7 +534,9 @@ RealStart:
 .wifi_setup_confirm_password_text db 10, 'Write password to ESP: (Y/N)', 10, 0
 .wifi_setup_cancelled db 10, 'Cancelled', 10, 0
 .wifi_setup_next_letter db 'A'
-        
+
+        ENDIF
+
 .print_info:
         ld hl, .information_text
         call puts
