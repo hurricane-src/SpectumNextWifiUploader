@@ -168,6 +168,12 @@ SERVER_BANK EQU 223 ; 2MB
 
 ## Steps
 
+### Get the image
+
+The binary is already available at: https://github.com/hurricane-src/SpectumNextWifiUploader/releases
+
+### Or build it
+
 The build is made using a basic cmake and **sjasmplus**
 
 ```
@@ -176,4 +182,12 @@ cd build
 cmake .. -DCMAKE_ZXASM_COMPILER="/path/to/sjasmplus"
 make
 ```
+
+### Or assemble it
+
+Or you can simply use sjasmplus directly by typing:
+```
+sjasmplus --zxnext main.asm
+```
+In the source directory.
 
